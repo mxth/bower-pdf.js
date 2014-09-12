@@ -1,0 +1,6 @@
+{
+  "name": "pdf.js",
+  "version": "1.0.712",
+  "main": "./pdf.js",
+  "ignore": []
+}
