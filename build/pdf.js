@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.770';
-PDFJS.build = '74d02c3';
+PDFJS.version = '1.0.714';
+PDFJS.build = 'ccbf55a';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -1647,6 +1647,13 @@ PDFJS.disableWorker = (PDFJS.disableWorker === undefined ?
 PDFJS.workerSrc = (PDFJS.workerSrc === undefined ? null : PDFJS.workerSrc);
 
 /**
+ * Disable the use of RequireJS to load the worker file. When enabled the worker
+ * file will be loaded by RequireJS
+ * @var {boolean}
+ */
+PDFJS.useRequireJS = (PDFJS.useRequireJS === undefined ? false : PDFJS.useRequireJS);
+
+/**
  * Disable range request loading of PDF files. When enabled and if the server
  * supports partial content requests then the PDF will be fetched in chunks.
  * Enabled (false) by default.
@@ -1759,11 +1766,6 @@ PDFJS.maxCanvasPixels = (PDFJS.maxCanvasPixels === undefined ?
  * password if wrong or no password was provided. The callback receives two
  * parameters: function that needs to be called with new password and reason
  * (see {PasswordResponses}).
- *
- * @param {function} progressCallback is optional. It is used to be able to
- * monitor the loading progress of the PDF file (necessary to implement e.g.
- * a loading bar). The callback receives an {Object} with the properties:
- * {number} loaded and {number} total.
  *
  * @return {Promise} A promise that is resolved with {@link PDFDocumentProxy}
  *   object.
@@ -2362,9 +2364,15 @@ var WorkerTransport = (function WorkerTransportClosure() {
         // In the developer build load worker_loader which in turn loads all the
         // other files and resolves the promise. In production only the
         // pdf.worker.js file is needed.
-        Util.loadScript(PDFJS.workerSrc, function() {
-          PDFJS.fakeWorkerFilesLoadedCapability.resolve();
-        });
+        if (PDFJS.useRequireJS) {
+          require(['pdfjs-worker'], function() {
+            PDFJS.fakeWorkerFilesLoadedCapability.resolve();
+          });
+        } else {
+          Util.loadScript(PDFJS.workerSrc, function() {
+            PDFJS.fakeWorkerFilesLoadedCapability.resolve();
+          });
+        }
       }
       PDFJS.fakeWorkerFilesLoadedCapability.promise.then(function () {
         warn('Setting up fake worker.');
